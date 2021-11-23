@@ -22,7 +22,6 @@ logging.basicConfig(
 def main(config_path):
     ## read config files
     config = read_yaml(config_path)
-    params = read_yaml(params_path)
     
     ##get the data
     (X_train_full, y_train_full), (X_test, y_test) = tf.keras.datasets.mnist.load_data()
@@ -47,7 +46,7 @@ def main(config_path):
     ]
 
     ##define the model and compile it
-    model = tf.keras.model.Sequential(LAYERS)
+    model = tf.keras.models.Sequential(LAYERS)
 
     LOSS = "sparse_categorical_crossentropy"
     OPTIMIZER = tf.keras.optimizers.SGD(learning_rate=1e-3) ##OPTIMIZER = "SGD"
@@ -56,6 +55,23 @@ def main(config_path):
     model.compile(loss=LOSS, optimizer=OPTIMIZER, metrics=METRICS) 
 
     model.summary()
+
+    ##train the model
+    history = model.fit(
+        X_train, y_train, 
+        epochs=10, 
+        validation_data=(X_valid, y_valid),
+        verbose=2)
+
+    ##save the model
+    model_dir_path = os.path.join("artifacts", "models")
+    create_directories([model_dir_path])
+
+    model_file_path = os.path.join(model_dir_path, "base_model.h5")
+    model.save(model_file_path)
+
+    logging.info(f"base model is saved at {model_file_path}")
+    logging.info(f"evaluation metrics {model.evaluate(X_test, y_test)}")
 
 
 if __name__ == '__main__':
@@ -66,7 +82,7 @@ if __name__ == '__main__':
     try:
         logging.info("\n********************")
         logging.info(f">>>>> stage {STAGE} started <<<<<")
-        main(config_path=parsed_args.config, params_path=parsed_args.params)
+        main(config_path=parsed_args.config)
         logging.info(f">>>>> stage {STAGE} completed!<<<<<\n")
     except Exception as e:
         logging.exception(e)
