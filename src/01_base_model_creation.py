@@ -20,6 +20,7 @@ logging.basicConfig(
     )
 
 
+
 def main(config_path):
     ## read config files
     config = read_yaml(config_path)
@@ -31,10 +32,15 @@ def main(config_path):
     X_valid, X_train = X_train_full[:5000], X_train_full[5000:]
     y_valid, y_train = y_train_full[:5000], y_train_full[5000:]
 
+
     ##set seeds
     seed = 2021 ## get it from config
     tf.random.set_seed(seed)
     np.random.seed(seed)
+
+    ## load the base model - 
+    base_model_path = os.path.join("artifacts", "models", "base_model.h5")
+    base_model = tf.keras.models.load_model(base_model_path)
 
     ##define layer
     LAYERS = [
@@ -55,15 +61,13 @@ def main(config_path):
 
     model.compile(loss=LOSS, optimizer=OPTIMIZER, metrics=METRICS) 
 
-    #model.summary()
-    
-    ##log our model summary information in logs
     def _log_model_summary(model):
         with io.StringIO() as stream:
             model.summary(print_fn= lambda x: stream.write(f"{x}\n"))
             summary_str = stream.getvalue()
         return summary_str
     
+    #model.summary()
     logging.info(f"{STAGE} model summary: \n{_log_model_summary(model)}")
 
     ##train the model
